@@ -165,6 +165,6 @@ Future
 * assert for network / connection errors
 * better body handling
 * descriptive checkers for validating complicated bodies.  
-   ** currently support only string, regex, and json, 
-   ** considering simple ways to allow multiple assertions for the body...
+   * currently support only string, regex, and json, 
+   * considering simple ways to allow multiple assertions for the body...
 * handle timeouts
