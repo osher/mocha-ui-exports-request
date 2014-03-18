@@ -190,5 +190,5 @@ Future
 * descriptive checkers for validating complicated bodies.  
    * currently support only string, regex, and json, 
    * considering simple ways to allow multiple assertions for the body...
-     perhaps `body: [ xRegexp1, xRegexp2, fCustom1, fCustom2, ... ] or something should add a check per element in the array
+     perhaps `body: [ xRegexp1, xRegexp2, fCustom1, fCustom2, ... ]` or something should add a check per element in the array, where `fCustom` expects the body as arg, and may have meaningful name for the check title
 * handle timeouts
