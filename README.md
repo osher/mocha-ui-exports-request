@@ -160,6 +160,29 @@ and get a spec-report like this:
 How would you feel?
 
 
+Install
+--------
+```
+npm install mocha-ui-exports-request
+```
+
+ok, long name. I will accept better offers...
+
+Test
+-----
+the published package does not contain the test suite.
+You'll have to clone it, to `npm install` from within the cloned folder, and then:
+
+```
+npm test
+```
+
+Contribute
+----------
+Sure, why not. That's why it's here ;)
+
+
+
 Future
 -------
 * assert for network / connection errors
@@ -167,4 +190,5 @@ Future
 * descriptive checkers for validating complicated bodies.  
    * currently support only string, regex, and json, 
    * considering simple ways to allow multiple assertions for the body...
+     perhaps `body: [ xRegexp1, xRegexp2, fCustom1, fCustom2, ... ] or something should add a check per element in the array
 * handle timeouts
