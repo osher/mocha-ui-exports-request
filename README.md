@@ -3,9 +3,13 @@ mocha-ui-exports-request
 
 Brief
 ------
-Unit-test helper for network request assertions, 
-based on Mikael's request and should.js of visionmedia, 
-designed for [mocha-ui-exports](https://github.com/osher/mocha-ui-exports).
+
+Use a DECLEARATIVE language for your HTTP request assertions, and get DESCRIPTIVE spec output from your mocha tests.
+
+This is a unit-test helper for network request assertions, 
+based on Mikael's [request](https://github.com/mikeal/request) and [should.js](https://github.com/visionmedia/should.js) of visionmedia, 
+designed for the [mocha-ui-exports](https://github.com/osher/mocha-ui-exports) for [mocha](https://github.com/visionmedia/mocha).
+
 
 Content
 -------
