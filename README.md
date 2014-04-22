@@ -40,7 +40,7 @@ Lets just take for example - a notes application, that uses couch-db.
 To make the example short, lets just assume 2 APIs: 
  * homepage - an HTML page
  * list-notes - an AJAX call
- * post-note (I don't cover this API to keep the example short)
+ * post-note - an AJAX call
 
 You want DESCRIPTIVE test results that follow the BDD principal that makes it 
 as readable as specifications.
@@ -66,7 +66,7 @@ One that looks, for example, like that:
         √ should return status 200
         √ should emit http-header: 'content-type' as text/json
         √ body should be : '{"notes":[{"date":1396257...'
-    ajax - /ajax/listnotes
+    ajax - /ajax/postnote
       with valid form - should accept the note
         √ should return status 200
     all expected couch-db hits
