@@ -52,7 +52,7 @@ One that looks, for example, like that:
       with no parameters
         √ should return status 200
         √ should emit http-header: 'content-type' as text/html
-        √ body should match : /<h1>Your notes</h1>/
+        √ body should match : /<h1>Your notes<\/h1>/
     ajax - /ajax/listnotes
       with no parameters - should return the 5 latest notes
         √ should return status 200
@@ -108,7 +108,7 @@ module.exports =
         , headers: 
           { "content-type" : "text/html"
           }
-        , body: /<h1>Your notes</h1>/
+        , body: /<h1>Your notes<\/h1>/
         }
       )
     }
