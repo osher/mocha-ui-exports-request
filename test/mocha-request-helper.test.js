@@ -60,6 +60,7 @@ module.exports =
             , response: 
               { headers : 
                 { header1 : 'val1' 
+                , header2 : 'val2' 
                 } 
               }
             }
@@ -91,6 +92,7 @@ module.exports =
             , response: 
               { headers : 
                 { "reg-header1": "this is val1 header" 
+                , "reg-header2": "this is val2 header" 
                 } 
               }
             }
@@ -106,6 +108,14 @@ module.exports =
             { throw   : /to have property/
             , response: 
               { headers : {} 
+              }
+            }
+          , "missing second http-header should fail" : 
+            { throw   : /expected .+ to have property 'reg-header2'/
+            , response: 
+              { headers : 
+                { "reg-header1": "this is val1 header"
+                } 
               }
             }
           }
@@ -161,6 +171,27 @@ module.exports =
             }
           }
         )
+      , "body as array of checks" :
+        respondsCheck( 
+          { body: 
+            [ /^string/
+            , /to be/
+            , /checked$/
+            ]
+          }
+        , { "body matching all checks should pass" :
+            { response:
+              { body: 'string to be checked'
+              }
+            }
+          , "body matching matching partially should fail" :
+            { throw: true
+            , response:
+              { body: 'string to be validated'
+              }
+            }
+          }
+        )
       , "all options used together" : 
         respondsCheck( 
           { status: 404
@@ -207,12 +238,14 @@ function respondsCheck(expect, asserts) {
     });
 
     if (expect.body)
-        suite["check added for: body"] = 
-          testFound(
-            'string' == typeof expect.body 
-               ? "body should be : " + expect.body.substr(0,20) + (expect.body.length > 20 ? "..." : "" )
-               : "body should match : " + expect.body
-          )
+        if (Array.isArray( expect.body ))
+            suite["checks added for: all body checkers"] = 
+              function() {
+                  expect.body.map(bodyCheckFound).forEach(function(f){ f() } )
+              }
+        else
+            suite["check added for: body"] = 
+              bodyCheckFound(expect.body)
 
     suite["calling beforeAll fires the request with the uri provided to factory"] = 
       function(done) {
@@ -230,7 +263,13 @@ function respondsCheck(expect, asserts) {
         suite['checked against response with ' + title] =
           function(done) {
               var fire = suite.beforeAll
-                , fTest = suite[  Object.keys(suite)[1] ]
+                , arrTests = Object.keys(suite).slice(1)
+                , fTest = 
+                  function() {
+                      arrTests.forEach(function(title) {
+                          suite[ title ]();
+                      });
+                  }
                 , opts
                 ;
 
@@ -251,21 +290,35 @@ function respondsCheck(expect, asserts) {
 
     return suite;
 
+    function bodyCheckFound(title) {
+        return testFound( 
+          'string' == typeof title
+          ? "body should be : " + title.substr(0,20) + (title.length > 20 ? "..." : "" )
+          : "body should match : " + title
+        );
+    }
     function testFound(title) {
         return function() {
             suite.should.have.property(title);
+            if (!suite[title]) console.log("eh?", title, suite) || process.exit();
+
             suite[title].should.be.type('function');
         }
     }
 }
 
 function addInitiationCheck(inSuite, reqCase) {
-    return block(function() { 
-        var r = request(reqCase)
-          , suite
-          , respondsSuite 
-          ;
-        suite =  
+    var r 
+      , respondsSuite
+      , subsuite = {}
+      ;
+    
+    inSuite[ (typeof reqCase) + " as " + (reqCase.title || JSON.stringify(reqCase))] = 
+      { "should not fail" : 
+        function() {
+            r = request(reqCase) 
+        }
+      , "the returned value" :
         { "should be a live object" : 
           function() {
               Should.exists(r);
@@ -277,8 +330,6 @@ function addInitiationCheck(inSuite, reqCase) {
               r.responds.should.be.type('function');
               r.responds.length.should.eql(1);
           }
-        };
-        
-        inSuite[ (typeof reqCase) + " as " + (reqCase.title || JSON.stringify(reqCase)) + ', the returned value'] = suite;
-    })
+        }
+      }
 }

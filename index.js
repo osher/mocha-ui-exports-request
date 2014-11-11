@@ -46,21 +46,25 @@ function requestTester(options){
                       ;
               });
 
-          if (expect.json) 
-              expect.body = JSON.stringify(expects.json);
+          if (!expect.body) expect.body = [];
+          if (!Array.isArray(expect.body)) expect.body = [ expect.body ];
 
-          if (expect.body)
-              if (expect.body instanceof RegExp)
-                  suite["body should match : " + expect.body] = 
+          if (expect.json) 
+              expect.body.push( JSON.stringify(expects.json) );
+
+          expect.body.forEach(function(body) { 
+              if (body instanceof RegExp)
+                  suite["body should match : " + body] = 
                       function() {
                           res.should.have.property('body');
-                          res.body.should.match(expect.body)
+                          res.body.should.match(body)
                       };
               else //body is string
-                  suite["body should be : " + expect.body.substr(0,20) + (expect.body.length > 20 ? "..." : "" )] = 
+                  suite["body should be : " + body.substr(0,20) + (body.length > 20 ? "..." : "" )] = 
                       function() {
-                          res.should.have.property('body', expect.body )
+                          res.should.have.property('body', body )
                       };
+          });
 
           return suite;
       } 
