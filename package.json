@@ -11,6 +11,9 @@
     "test": "mocha"
   },
   "license": "MIT",
+  "dependencies" : {
+    "request": "~2.47.0"
+  },
   "devDependencies": {
     "mocha-ui-exports": "~0.2.0",
     "mocha": "~1.18.0"
