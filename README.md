@@ -225,7 +225,7 @@ describe('/my-path',
   describe('called with bad parameter value, 
     request('http://localhost:4321/my-path?param=bad')
     .responds({
-      status: 404
+      status: 400
     }).described()
   )
 )
