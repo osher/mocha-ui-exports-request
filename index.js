@@ -106,6 +106,14 @@ function requestTester(options){
           if (expect.and) 
               suite.and = toSubsuite(expect.and, 'res')
                 
+          Object.defineProperty(suite, 'described', {
+            value:        function() {
+                return function() { toStdBdd(suite, global) }
+            },
+            enumerable:   false,
+            writable:     false,
+            configurable: true
+          }
           
           return suite;
           
@@ -133,6 +141,35 @@ function requestTester(options){
                   return wrapped
               }, {})
           }
-      } 
-    } 
+
+          function toStdBdd(suite, ctx) {
+              Object.keys(suite).forEach(function(title) {
+                  switch( typeof suite[title] ) {
+                    //actual handlers
+                    case 'function': 
+                      switch(title) {
+                        case 'beforeAll': 
+                        case 'setup':       return ctx.before(suite[title]);
+                        case 'beforeEach':  return ctx.beforeEach(suite[title]);
+                        case 'afterEach':   return ctx.afterEach(suite[title]);
+                        case 'afterAll': 
+                        case 'teardown':    return ctx.after(suite[title]);
+                        case 'timeout':     return; //for now - we don't have it, but not to forget
+                      }
+                      return ctx.it(title, suite[title]);
+
+                    //pending tests
+                    case 'string':
+                    case 'undefined': 
+                    case 'boolean':
+                      return ctx.it(title); 
+                        
+                    //subsuites
+                    case 'object': 
+                      ctx.describe(title, function() { toStdBdd( suite[title], global) } )
+                  }
+              })
+          }
+      }
+    }
 }

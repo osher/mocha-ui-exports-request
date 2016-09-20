@@ -206,6 +206,34 @@ module.exports =
 
 ```
 
+I want to use it with the standard BDD mocha ui
+----
+
+So do:
+
+```
+var request = require('mocha-ui-exports-request')
+
+describe('/my-path', 
+  describe('called with no parameters', 
+    request('http://localhost:4321/my-path')
+    .responds({
+      status: 200
+    }).described()
+  );
+  
+  describe('called with bad parameter value, 
+    request('http://localhost:4321/my-path?param=bad')
+    .responds({
+      status: 404
+    }).described()
+  )
+)
+
+```
+
+This will registger all the test handlers using `describe`, `before`, `it` and `after`, using the same titles and structure.
+
 
 Install
 --------
