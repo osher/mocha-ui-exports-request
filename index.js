@@ -1,9 +1,9 @@
 var extend  = require('util')._extend;
 var request = require('request');
 
-Object.defineProperty(exports, 'request'
-, { get: function() { return requestTester }
-  , set: function(v) { request = v || require('request') } //TRICKY: for tests, to inject http request mock
+Object.defineProperty(module.exports = requestTester, 'request'
+, { get:          function() { return requestTester }
+  , set:          function(v) { request = v || require('request') } //TRICKY: for tests, to inject http request mock
   , enumerable  : true
   , configurable: false
   }
@@ -104,7 +104,7 @@ function requestTester(options){
                 );
           
           if (expect.and) 
-              suite.and = toSubsuite(expect.and, 'res')
+              suite.and = toSubsuite(expect.and, 'res');
                 
           Object.defineProperty(suite, 'described', {
             value:        function() {

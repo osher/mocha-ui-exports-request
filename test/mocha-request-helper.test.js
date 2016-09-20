@@ -1,5 +1,5 @@
 var helper = require('../')
-  , request = helper.request
+  , request = helper
   ;
 
 module.exports = 

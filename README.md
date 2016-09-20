@@ -91,11 +91,13 @@ How would you feel if I tould you that you can do it this way:
 
 ```
     // the test target
-var svr = require('../server') 
+var svr     = require('../server') 
     //the helper
-  , request =require('mocha-ui-exports-request')
+  , request = require('mocha-ui-exports-request')
     //plugs the recorded scenario of http requests to couch
-  , nock =  require('fixtures/nock')
+  , nock    =  require('fixtures/nock')
+    //System Under Test
+  , SUT     = "http://127.0.0.1:1234"
   ;
 
 svr.listen(1234);
@@ -104,7 +106,7 @@ module.exports =
 { "./lib/server.js" : 
   { "homepage - /" :
     { "with no parameters" :
-      request("http://127.0.0.1:1234/")
+      request( SUT + "/")
       .responds(
         { status: 200
         , headers: 
@@ -116,7 +118,7 @@ module.exports =
     }
   , "ajax - /ajax/listnotes" :
     { "with no parameters - should return the 5 latest notes in fixture" :
-      request("http://127.0.0.1:1234/ajax/listnotes")
+      request(SUT + "/ajax/listnotes")
       .responds(
         { status : 200
         , headers: 
@@ -144,7 +146,7 @@ module.exports =
         }
       )
     , "with 'to' - should return the next page in fixture" :
-      request("http://127.0.0.1:1234/ajax/listnotes/to/2014-03-31/")
+      request(SUT + "/ajax/listnotes/to/2014-03-31/")
       .responds(
         { status: 200
         , headers: 
@@ -166,7 +168,7 @@ module.exports =
         }
       )
     , "with 'to' and 'from' - should return the cut" :
-      request("http://127.0.0.1:1234/ajax/listnotes/from/2014-03-30/to/2014-03-30/")
+      request(SUT + "/ajax/listnotes/from/2014-03-30/to/2014-03-30/")
       .responds(
         { status: 200
         , headers: 
@@ -185,7 +187,7 @@ module.exports =
   , "ajax - /ajax/postnote" :
     { "with valid form - should accept the note" :
       request(
-        { uri : "http://127.0.0.1:1234/ajax/postnote"
+        { uri : SUT + "/ajax/postnote"
         , form: 
           { note : "note 9"
           }
@@ -206,29 +208,31 @@ module.exports =
 
 ```
 
-I want to use it with the standard BDD mocha ui
-----
+I want to use the standard BDD mocha UI
+----------
 
-So do:
+Ok. here:
 
 ```
 var request = require('mocha-ui-exports-request')
+  , SUT     = 'http://localhost:4321'
+  ;
 
-describe('/my-path', 
+describe('/my-path', function() {
   describe('called with no parameters', 
-    request('http://localhost:4321/my-path')
+    request(SUT + '/my-path')
     .responds({
       status: 200
     }).described()
   );
   
   describe('called with bad parameter value, 
-    request('http://localhost:4321/my-path?param=bad')
+    request(SUT + '/my-path?param=bad')
     .responds({
       status: 400
     }).described()
   )
-)
+})
 
 ```
 
