@@ -375,7 +375,7 @@ module.exports = {
       })
     },
     'search for specific existing product' : 
-      request( 'http://my-sut-server.com/search?no-such-product' )
+      request( 'http://my-sut-server.com/search?yellow%20t%20shirt' )
       .responds( {
         json: { products: [ { name: 'XL yellow T-Shirt', description: 'a very cool shirt, organic materials, very comfortable, loved by our customers' } ] }
       })
