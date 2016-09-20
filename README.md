@@ -240,15 +240,205 @@ RequestTester#Responds
 `reqTester#responds(options) : suite`
 It builds an asserter for every one of the options provided.
 Supported options:
- * `options.status` - status code. generates *"should return status ..."* asserts.
- * `options.headers` - headers collection. generates *"should emit http-header: 'xxx' as yyy"* asserts
+
+### options.status
+
+assert a status code. generates *"should return status ..."* asserts.
+
+Example: 
+```
+module.exports = {
+  '/my/resource' : 
+    request( 'http://my-sut-server.com/my/resource' )
+    .responds( {
+      status: 200
+    })
+}
+```
+
+becomes:
+
+```
+/my/resource
+   √ should return status 200
+```
+
+### options.headers
+
+asserts against headers in the headers collection. generates *"should emit http-header: 'xxx' as yyy"* asserts
     keys are expected HTTP-headers, values can be strings to compare to, or RegExps to match with.
- * `options.body` -  an array of body asserts, such as *"body should match: ..."*
-    (When non-array valur is found - it's converted to an array of one assertion).
-    Values can be: strings to compare to, or regex to match with. 
-    (I'll add soon - a custom assert-function for your own asserts that cannot be expressed with regexp.
-     function will throw or return an error to indicate an error)
- * `options.json` - if provided - it is stringified and treated a a string body asserter.
+    
+Example:
+```
+module.exports = module.exports = {
+  '/my path' : 
+    request( 'http://my-sut-server.com/my-path' )
+    .responds( {
+      headers: { 
+        'x-powered-by' : 'my cool server'
+        etag : /.*/
+      }
+    })
+}
+```
+
+becomes:
+```
+/my-path
+   √ should emit http-header: 'x-powered-by' as 'my cool server'
+   √ should emit http-header: 'etag' as /.*/
+
+```
+    
+### options.responseHeaders
+
+For add-hock assertions that should be performed against the *entire* headers collection, 
+and cannot be expressed as descrete assertions against a single http header.
+The test titles in this case are your responsibility. Your tests will be grouped under 'response headers' section
+The value of this entry should be an object where every key is a test-tile, and every value 
+is a function that accepts the `response.headers` collection and performs add-hock assertions against it.
+
+Example:
+```
+module.exports = module.exports = {
+  '/my path' : 
+    request( 'http://my-sut-server.com/my-path' )
+    .responds( {
+      responseHeaders: { 
+        'must contain either x-powered-by or x-server-type' : function(headers) {
+            Should( headers['x-powered-by'] || headers['x-server-type']).be.ok
+        }
+      }
+    })
+}
+```
+
+becomes:
+```
+/my-path
+    response headers
+      √ must contain either x-powered-by or x-server-type
+
+```
+
+### options.body
+
+an array of body asserts. Assertions may be:
+  - `string` - asserts that the body is equal to the given `string` value, under title like : *"body should be : {your assertion value}"*.
+       When the given value is longer than 20 chars the remnant is cut and appended with ellipis (...).
+  - `RegExp` - asserts that the body matches the given `RegExp` value, under title like *"body should match: ..."*
+  - `object` - this is a suite object, where every key is a test tile, and every value is a test-funciton that expects the body, 
+       and lets you write whatever add-hock tests you need. In this case, the test titles are your responsibility.
+  - `Array` - a combination of any of the above.
+  
+Example:
+```
+module.exports = module.exports = {
+  '/my path' : 
+    request( 'http://my-sut-server.com/index.html' )
+    .responds( {
+      body: [
+        /<h3>Hello Anonymous</h3>/,
+        /<h2>Our Catalog</h2>/,
+        { 'should contain 3 promoted products' : function(body) { 
+              var n = 0;
+              body.replace(/class="promotedProduct"/, function() { n++ } );
+              n.should.eql(3)
+          }
+        }
+      ]
+    })
+}
+```
+
+becomes:
+```
+/my-path
+   √ body should match: /<h3>Hello Anonymous</h3>/
+   √ body should match: /<h2>Our Catalog</h2>/
+   response body
+      √ sould contain 3 promoted products
+```
+  
+### options.json
+
+When provided - it is stringified and treated a a string body asserter.
+
+Example: 
+```
+module.exports = {
+  '/api/search' : 
+    'search for non existing product' : 
+      request( 'http://my-sut-server.com/search?no-such-product' )
+      .responds( {
+        json: { products: [ ] }
+      })
+    },
+    'search for specific existing product' : 
+      request( 'http://my-sut-server.com/search?no-such-product' )
+      .responds( {
+        json: { products: [ { name: 'XL yellow T-Shirt', description: 'a very cool shirt, organic materials, very comfortable, loved by our customers' } ] }
+      })
+    }
+  }
+}
+```
+
+becomes:
+
+```
+/api/search 
+   search for non existing product
+      √ body should be '{ products: [ ] }'
+   search for specific existing product
+      √ body should be "{"products":[{"name"..."
+```
+
+### options.err
+Assert an expected error for your request. 
+  - Mind that it's a network error, and not HTTP error. HTTP errors are checked with `options.status`.
+  - it's useful in wierd edge-cases, for example, when you want to test that the server instance terminates
+    in response to a shutdown request by an authenticated administrator.
+
+### options.and
+
+a subsuite of add-hock custom assertions, performed against the entire response object.
+The value should be an object where every key is a test-tile, and every value is a function that accepts the `response` 
+object and performs add-hock assertions against it.
+
+
+Example: 
+```
+module.exports = {
+  '/api/wierd' : {
+    request('http://my-sut-server.com/search?no-such-product')
+    .responds({
+      headers: { 
+        'x-powered-by' : 'my cool server'
+        etag : /.*/
+      },
+      and: {
+        'should redirect header, or the resource' : function(res) {
+            Should.be.ok(
+              res.status == 302 ||
+              res.status == 200 && res.headers['content-type'] == 'application/json' 
+            )
+        }
+      }
+    })
+  }
+}
+```
+
+becomes:
+```
+
+/api/wierd
+   √ should emit http-header: 'x-powered-by' as 'my cool server'
+   √ should emit http-header: 'etag' as /.*/
+   and
+      √ should give a redirect header, or the resource
+```
    
 For more detailed API spec - don't dig for docs - run the [test](#test), just like the BDD lore sais...
 Have fun ;)
@@ -260,12 +450,7 @@ Sure, why not. That's why it's here ;)
 
 Future
 ------
- * assert for network / connection errors
- * better body handling
- * descriptive checkers for validating complicated bodies.  
-   * currently support only string, regex, and json, 
-   * considering simple ways to allow multiple assertions for the body...
-     perhaps `body: [ xRegexp1, xRegexp2, fCustom1, fCustom2, ... ]` or something should add a check per element in the array, where `fCustom` expects the body as arg, and may have meaningful name for the check title
+ * negated assertions (status is not..., body does not contain...)
  * handle timeouts
 
 

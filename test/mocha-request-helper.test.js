@@ -28,9 +28,9 @@ module.exports =
 
         return suite;
     })
-  , "#responds(expect) " : 
+  , "#responds(expect, customSuite) " : 
     { "with" : 
-      { "status check" : 
+      { "status assertion" : 
         respondsCheck( 
           { status: 200 
           }
@@ -48,7 +48,7 @@ module.exports =
             }
           }
         )
-      , "few http headers as strings" : 
+      , "few http header assertions as strings" : 
         respondsCheck( 
           { headers: 
             { header1 : 'val1'
@@ -80,7 +80,7 @@ module.exports =
             }
           }
         )
-      , "few http headers as regexp" : 
+      , "few http header assertions as regexp" : 
         respondsCheck( 
           { headers: 
             { "reg-header1" : /val1/
@@ -120,7 +120,7 @@ module.exports =
             }
           }
         )
-      , "body as a short string check" : 
+      , "body assertion as a short string check" : 
         respondsCheck( 
           { body: 'string check' 
           }
@@ -137,7 +137,7 @@ module.exports =
             }
           }
         )
-      , "body as a long string check" : 
+      , "body assertion as a long string check" : 
         respondsCheck( 
           { body: 'a very very very very very very very very long string check' 
           } 
@@ -154,7 +154,7 @@ module.exports =
             }
           }
         )
-      , "body as reg-ex check" : 
+      , "body assertion as reg-ex check" : 
         respondsCheck( 
           { body: /string check/ 
           } 
@@ -171,12 +171,47 @@ module.exports =
             }
           }
         )
-      , "body as array of checks" :
+      , "body assertion as addhock subsuite" : 
+        respondsCheck( 
+          { body: 
+            { 'should answer my private adhoc logic' : 
+              function(body) {
+                  body.should.include('correct')
+              },
+              'should answer my private adhoc extended logic' : 
+              function(body) {
+                  body.should.not.include('wrong')
+              }
+            }
+          }
+        , { "request body that satisfies all handlers should pass" : 
+            { response: 
+              { body: 'this is a correct body'
+              }
+            }
+          , "request body that does not satisfy any handlers should fail" :
+            { throw: true
+            , response: 
+              { body: 'this looks correct but is wrong'
+              }
+            }
+          , "request body that does not satisfy all handlers should fail" :
+            { throw: true
+            , response: 
+              { body: 'this is absolutely wrong'
+              }
+            }
+          }
+        )
+      , "body assertions as array of checks" :
         respondsCheck( 
           { body: 
             [ /^string/
             , /to be/
             , /checked$/
+            , { 'adhock rule 1' : function(body) { body.should.be.ok } 
+              , 'adhock rule 2' : function(body) { body.should.be.ok } 
+              }
             ]
           }
         , { "body matching all checks should pass" :
@@ -192,14 +227,116 @@ module.exports =
             }
           }
         )
-      , "all options used together" : 
+      , "expected error assertion (mind that it's basically network errors, not HTTP errors)" : 
+        respondsCheck(
+          { err: /this error/
+          }
+        , { 'response errors the expected error - should pass' : 
+            { err: new Error('this error')
+            }
+          , 'response errors a different error - should fail' : 
+            { throw: true
+            , err: new Error('another error')
+            }
+          , 'response does not error for expected error - should fail' : 
+            { throw: true
+            , response: {}
+            }
+          }
+        )
+      , "assertions against the entire http-headers collection" : 
+        respondsCheck(
+          { responseHeaders: {
+              "there should be x-header-a or x-header-b" : function(headers) {
+                  ['x-header-a', 'x-header-b'].filter(function(header) {
+                      return headers[header]
+                  }).length.should.be.ok;
+              }
+            }
+          }
+        , { "headers that satisfy responseHeaders custom check should pass" : 
+            { response: 
+              { headers: 
+                { 'x-header-b' : 'value' 
+                }
+              }
+            }
+          , "headers that dont satisfy responseHeaders custom check should fail" : 
+            { throw: true
+            , response: 
+              { headers: 
+                { 'x-header-c' : 'value' 
+                }
+              }
+            }
+          }
+        )
+      , "assertions against the responseBody as responseBody" : 
+        respondsCheck(
+          { responseBody: 
+            { 'should answer my cool logic rule 1' : function(body) {
+                  body.should.include( { a: { b: { c: 'd' } } } )
+              },
+              'should answer my cool logic rule 2' : function(body) {
+                  body.should.not.include( { a: { f: true } } )
+              }              
+            }
+          }
+        , { 'response body that satisfies the check should pass' : 
+            { response: 
+              { body: { a : { b : { c: 'd' } } } 
+              }
+            }
+          , 'response body that does not satisfy the check should fail' : 
+            { throw: true
+            , response: 
+              { body: { a : { b : { c: 'f' } } } 
+              }
+            }
+          }
+        )
+      , "adhock assertions against the entire response object" : 
+        respondsCheck(
+          { status: 200
+          , and: 
+            { 'should be cool' : 
+              function(res) { 
+                  Should(res.cool).be.ok
+              }
+            }
+          }
+        , { 'response that satisfies should pass' : 
+            { response: 
+              { status:   200
+              , headers:  {}
+              , body:     "very cool"
+              , cool:     true
+              }
+            }
+          , 'response that does not satisfy should fail' : 
+            { throw: true
+            , response: 
+              { status:   200
+              , headers:  {}
+              , body:     "very cool"
+              , uncool:   false
+              }
+            }
+          }
+        )
+      , "all declarative options used together" : 
         respondsCheck( 
           { status: 404
           , headers: 
             { 'content-type' : "text/html"
             , 'x-header'     : /.*/
             }
-          , body: /string check/ 
+          , body: /string check/
+          , responseHeaders: 
+            { "there should be x-header-a or x-header-b" : 
+              function(headers) {
+              }
+            }
           } 
         )
       }
@@ -262,39 +399,45 @@ function respondsCheck(expect, asserts) {
         var check = asserts[title];
         suite['checked against response with ' + title] =
           function(done) {
-              var fire = suite.beforeAll
-                , arrTests = Object.keys(suite).slice(1)
-                , fTest = 
-                  function() {
-                      arrTests.forEach(function(title) {
-                          suite[ title ]();
-                      });
-                  }
-                , opts
-                ;
 
-              helper.request = function(_, cb) { cb( check.err, check.response ) };
+              helper.request = function(_, cb) { cb( check.err, check.response, check.response ? check.response.body : undefined ) };
 
-              fire(
+              suite.beforeAll(
                 function(err) {
                     if (err) return done(err);
                     if (!!check.throw)
-                        fTest.should.throw( true == check.throw ? undefined : check.throw );
+                        runSuite.should.throw( true == check.throw ? undefined : check.throw );
                     else
-                        fTest();
+                        runSuite();
                     done();
                 }
-              )
+              );
+              
+              function runSuite() {
+                  runSuiteObj(suite)
+              }
+              
+              function runSuiteObj(suite) {
+                  Object.keys(suite)
+                        .filter(function(title) { return title != 'beforeAll' })
+                        .forEach(function(title) {
+                            'function' == typeof suite[title] 
+                              ? suite[title]()
+                              : runSuiteObj(suite[title])
+                        })
+              }
           }
     });
 
     return suite;
 
-    function bodyCheckFound(title) {
+    function bodyCheckFound(check) {
         return testFound( 
-          'string' == typeof title
-          ? "body should be : " + title.substr(0,20) + (title.length > 20 ? "..." : "" )
-          : "body should match : " + title
+          'string' == typeof check
+          ? "body should be : " + check.substr(0,20) + (check.length > 20 ? "..." : "" )
+          : check instanceof RegExp
+             ? "body should match : " + check
+             : "response body"
         );
     }
     function testFound(title) {
@@ -302,6 +445,8 @@ function respondsCheck(expect, asserts) {
             suite.should.have.property(title);
             if (!suite[title]) console.log("eh?", title, suite) || process.exit();
 
+            if ('object' == typeof suite[title]) return;
+            
             suite[title].should.be.type('function');
         }
     }
