@@ -113,7 +113,7 @@ function requestTester(options){
             enumerable:   false,
             writable:     false,
             configurable: true
-          }
+          })
           
           return suite;
           
