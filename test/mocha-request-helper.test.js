@@ -25,7 +25,17 @@ module.exports =
           , form: {a: 1 }
           }
         );
+        
+        addInitiationCheck( 
+          suite
+        , function() { return 'http://some.server.net/' }
+        );
 
+        addInitiationCheck( 
+          suite
+        , function() { return { uri: 'http://some.server.net/my/res', method: 'DELETE' } }
+        );
+        
         return suite;
     })
   , "#responds(expect, customSuite) " : 
@@ -458,7 +468,7 @@ function addInitiationCheck(inSuite, reqCase) {
       , subsuite = {}
       ;
     
-    inSuite[ (typeof reqCase) + " as " + (reqCase.title || JSON.stringify(reqCase))] = 
+    inSuite[ (typeof reqCase) + " as " + (reqCase.title || 'object' == typeof reqCase ? JSON.stringify(reqCase) : reqCase.toString() )] = 
       { "should not fail" : 
         function() {
             r = request(reqCase) 

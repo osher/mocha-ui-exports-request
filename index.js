@@ -18,6 +18,8 @@ function requestTester(options){
             , suite =  {
             beforeAll: 
             function(done) {
+                if ('function' == typeof options) options = options();
+                
                 request(options, function(oErr,oRes, body) {
                     ctx.res = res = oRes;
                     ctx.err = oErr;
