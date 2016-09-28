@@ -263,6 +263,7 @@ request
 It builds a requet-tester for the provided `reqOptions`.
 
 `reqOptions` - any options setting valid for mikael's [request](https://github.com/mikeal/request) module, including form, post-data, multiplart, and whatever you want.
+Starting from 1.0.1 - it could be a handler that returns such options settings.
 
 `RequestTester` - implements one method: `RequestTester#responds`, that returns a [mocha-ui-exports](https://github.com/osher/mocha-ui-exports) suite, who's setup function will fire the request, and hold it in context closure for all the asserts that follow.
 
