@@ -212,6 +212,17 @@ I want to use the standard BDD mocha UI
 ----------
 
 Ok. here:
+(since 1.0.2)
+
+If you set to `--ui bdd`, or if your `--ui` switch is not provided
+(not in your CLI command, nor in your `test/mocha.opts` file)
+then `.responds({..})` will use the `describe(..)` and `it(..)` APIs for you, 
+loading the generated tests with the generated descriptive titles to the tests tree.
+
+In this case, the `.responds({..})` will return a ***context object*** instead of the 
+suite that the [mocha-ui-exports](https://github.com/osher/mocha-ui-exports) plugin expects.
+The context object is described right after the snippet, and can be used to writing tests using `it(..)` 
+instead of providing `headers:`, `responseBody:`, or `and:` blocks.
 
 ```
 var request = require('mocha-ui-exports-request')
@@ -219,25 +230,46 @@ var request = require('mocha-ui-exports-request')
   ;
 
 describe('/my-path', function() {
-  describe('called with no parameters', 
-    request(SUT + '/my-path')
-    .responds({
-      status: 200
-    }).described()
-  );
-  
-  describe('called with bad parameter value, 
-    request(SUT + '/my-path?param=bad')
-    .responds({
-      status: 400
-    }).described()
-  )
+  describe('called with no parameters', function() {
+      var ctx = request(SUT + '/my-path')
+      .responds({
+        status: 200,
+      });
+      
+      it('should foo', function() {
+        ctx.res.should.be...
+      })
+  });
 })
 
 ```
 
 This will registger all the test handlers using `describe`, `before`, `it` and `after`, using the same titles and structure.
 
+If for some reason you're using hybrid UI and your `--ui` switch is set to 
+any value that is not `bdd` this behavior will not trigger automatically, however, you can 
+still trigger this behavior manually by calling `.bddCtx()`.
+
+```
+suite('/my-path', function() {
+  suite('called with bad parameter value', function() {
+    var ctx = request(SUT + '/my-path?param=bad')
+    .responds({
+      status: 400
+    }).bddCtx()
+    
+    test('should ...' )
+  })
+})
+```
+
+The returned `ctx` object has:
+ - `ctx.err` - when the http-request fails abruptly for networking issues (dns, network).
+    mind that if you have *ANY* statusCode - it means there was no error, and a response 
+    object is passed.
+ - `ctx.res` - the response object (`http.IncomingMessage`)
+ - `ctx.body` - the body on the passed response object, as extracted by the `request/request` 
+    package.
 
 Install
 --------
@@ -245,7 +277,7 @@ Install
 npm install mocha-ui-exports-request
 ```
 
-ok, long name. I will accept better offers...
+ok, long name. I will accept better offers. But until then... :P
 
 Test
 ----

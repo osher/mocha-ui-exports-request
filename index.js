@@ -10,6 +10,12 @@ Object.defineProperty(module.exports = requestTester, 'request'
 );
 
 function requestTester(options){ 
+    var uiIx    = process.argv.indexOf('--ui');
+    var isUiBdd = 
+          uiIx == -1 
+            ? true 
+            : process.argv[ uiIx + 1 ] == "bdd";
+      
     return {
       responds:  
       function(expect){ 
@@ -43,9 +49,9 @@ function requestTester(options){
                   }
                 ;
 
-          if (expect.status)
+          if (expect.statusCode || expect.status)
               suite["should return status " + expect.status] = function() {
-                  res.should.have.property('status', expect.status);
+                  res.should.have.property('statusCode', expect.statusCode || expect.status);
               };
 
           if (expect.headers)
@@ -108,14 +114,18 @@ function requestTester(options){
           if (expect.and) 
               suite.and = toSubsuite(expect.and, 'res');
                 
-          Object.defineProperty(suite, 'described', {
+          Object.defineProperty(suite, 'bddCtx', {
             value:        function() {
-                return function() { toStdBdd(suite, global) }
+                toStdBdd(suite, global);
+                return ctx
             },
             enumerable:   false,
             writable:     false,
             configurable: true
-          })
+          });
+
+          if (isUiBdd)
+              return suite.bddCtx();
           
           return suite;
           

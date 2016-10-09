@@ -47,13 +47,13 @@ module.exports =
         , { "correct status code should pass" : 
             { throw   : null
             , response: 
-              { status: 200 
+              { statusCode: 200 
               }
             }
           , "wrong status code should fail" : 
-            { throw   : /to have property 'status' of/
+            { throw   : /to have property 'statusCode' of/
             , response: 
-              { status: 500
+              { statusCode: 500
               }
             }
           }
@@ -317,7 +317,7 @@ module.exports =
           }
         , { 'response that satisfies should pass' : 
             { response: 
-              { status:   200
+              { statusCode:   200
               , headers:  {}
               , body:     "very cool"
               , cool:     true
@@ -326,7 +326,7 @@ module.exports =
           , 'response that does not satisfy should fail' : 
             { throw: true
             , response: 
-              { status:   200
+              { statusCode:   200
               , headers:  {}
               , body:     "very cool"
               , uncool:   false
