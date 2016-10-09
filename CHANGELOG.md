@@ -1,3 +1,6 @@
+## 1.1.1
+ - fix devDependency version
+ 
 ## 1.1.0
  - support `request({..}).responds({..}).bddCtx()`, implied whenever `--ui bdd`.
    the feature triggers automatically when `--ui` is `bdd` (or unset).
