@@ -1,15 +1,21 @@
 var extend  = require('util')._extend;
 var request = require('request');
 
-Object.defineProperty(exports, 'request'
-, { get: function() { return requestTester }
-  , set: function(v) { request = v || require('request') } //TRICKY: for tests, to inject http request mock
+Object.defineProperty(module.exports = requestTester, 'request'
+, { get:          function() { return requestTester }
+  , set:          function(v) { request = v || require('request') } //TRICKY: for tests, to inject http request mock
   , enumerable  : true
   , configurable: false
   }
 );
 
 function requestTester(options){ 
+    var uiIx    = process.argv.indexOf('--ui');
+    var isUiBdd = 
+          uiIx == -1 
+            ? true 
+            : process.argv[ uiIx + 1 ] == "bdd";
+      
     return {
       responds:  
       function(expect){ 
@@ -43,9 +49,9 @@ function requestTester(options){
                   }
                 ;
 
-          if (expect.status)
+          if (expect.statusCode || expect.status)
               suite["should return status " + expect.status] = function() {
-                  res.should.have.property('status', expect.status);
+                  res.should.have.property('statusCode', expect.statusCode || expect.status);
               };
 
           if (expect.headers)
@@ -106,8 +112,20 @@ function requestTester(options){
                 );
           
           if (expect.and) 
-              suite.and = toSubsuite(expect.and, 'res')
+              suite.and = toSubsuite(expect.and, 'res');
                 
+          Object.defineProperty(suite, 'bddCtx', {
+            value:        function() {
+                toStdBdd(suite, global);
+                return ctx
+            },
+            enumerable:   false,
+            writable:     false,
+            configurable: true
+          });
+
+          if (isUiBdd)
+              return suite.bddCtx();
           
           return suite;
           
@@ -135,6 +153,35 @@ function requestTester(options){
                   return wrapped
               }, {})
           }
-      } 
-    } 
+
+          function toStdBdd(suite, ctx) {
+              Object.keys(suite).forEach(function(title) {
+                  switch( typeof suite[title] ) {
+                    //actual handlers
+                    case 'function': 
+                      switch(title) {
+                        case 'beforeAll': 
+                        case 'setup':       return ctx.before(suite[title]);
+                        case 'beforeEach':  return ctx.beforeEach(suite[title]);
+                        case 'afterEach':   return ctx.afterEach(suite[title]);
+                        case 'afterAll': 
+                        case 'teardown':    return ctx.after(suite[title]);
+                        case 'timeout':     return; //for now - we don't have it, but not to forget
+                      }
+                      return ctx.it(title, suite[title]);
+
+                    //pending tests
+                    case 'string':
+                    case 'undefined': 
+                    case 'boolean':
+                      return ctx.it(title); 
+                        
+                    //subsuites
+                    case 'object': 
+                      ctx.describe(title, function() { toStdBdd( suite[title], global) } )
+                  }
+              })
+          }
+      }
+    }
 }

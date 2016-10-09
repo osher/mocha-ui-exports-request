@@ -1,3 +1,11 @@
+## 1.1.1
+ - fix devDependency version
+ 
+## 1.1.0
+ - support `request({..}).responds({..}).bddCtx()`, implied whenever `--ui bdd`.
+   the feature triggers automatically when `--ui` is `bdd` (or unset).
+   With any other value - can be triggered by calling the `.bddCtx()` method
+
 ## 1.0.1
  - support request descriptor as a function that returns the request options.
    The function is called right before sending the request.

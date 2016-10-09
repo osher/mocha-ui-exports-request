@@ -91,11 +91,13 @@ How would you feel if I tould you that you can do it this way:
 
 ```
     // the test target
-var svr = require('../server') 
+var svr     = require('../server') 
     //the helper
-  , request =require('mocha-ui-exports-request')
+  , request = require('mocha-ui-exports-request')
     //plugs the recorded scenario of http requests to couch
-  , nock =  require('fixtures/nock')
+  , nock    =  require('fixtures/nock')
+    //System Under Test
+  , SUT     = "http://127.0.0.1:1234"
   ;
 
 svr.listen(1234);
@@ -104,7 +106,7 @@ module.exports =
 { "./lib/server.js" : 
   { "homepage - /" :
     { "with no parameters" :
-      request("http://127.0.0.1:1234/")
+      request( SUT + "/")
       .responds(
         { status: 200
         , headers: 
@@ -116,7 +118,7 @@ module.exports =
     }
   , "ajax - /ajax/listnotes" :
     { "with no parameters - should return the 5 latest notes in fixture" :
-      request("http://127.0.0.1:1234/ajax/listnotes")
+      request(SUT + "/ajax/listnotes")
       .responds(
         { status : 200
         , headers: 
@@ -144,7 +146,7 @@ module.exports =
         }
       )
     , "with 'to' - should return the next page in fixture" :
-      request("http://127.0.0.1:1234/ajax/listnotes/to/2014-03-31/")
+      request(SUT + "/ajax/listnotes/to/2014-03-31/")
       .responds(
         { status: 200
         , headers: 
@@ -166,7 +168,7 @@ module.exports =
         }
       )
     , "with 'to' and 'from' - should return the cut" :
-      request("http://127.0.0.1:1234/ajax/listnotes/from/2014-03-30/to/2014-03-30/")
+      request(SUT + "/ajax/listnotes/from/2014-03-30/to/2014-03-30/")
       .responds(
         { status: 200
         , headers: 
@@ -185,7 +187,7 @@ module.exports =
   , "ajax - /ajax/postnote" :
     { "with valid form - should accept the note" :
       request(
-        { uri : "http://127.0.0.1:1234/ajax/postnote"
+        { uri : SUT + "/ajax/postnote"
         , form: 
           { note : "note 9"
           }
@@ -206,6 +208,68 @@ module.exports =
 
 ```
 
+I want to use the standard BDD mocha UI
+----------
+
+Ok. here:
+(since 1.1.0)
+
+If you set to `--ui bdd`, or if your `--ui` switch is not provided
+(not in your CLI command, nor in your `test/mocha.opts` file)
+then `.responds({..})` will use the `describe(..)` and `it(..)` APIs for you, 
+loading the generated tests with the generated descriptive titles to the tests tree.
+
+In this case, the `.responds({..})` will return a ***context object*** instead of the 
+suite that the [mocha-ui-exports](https://github.com/osher/mocha-ui-exports) plugin expects.
+The context object is described right after the snippet, and can be used to writing tests using `it(..)` 
+instead of providing `headers:`, `responseBody:`, or `and:` blocks.
+
+```
+var request = require('mocha-ui-exports-request')
+  , SUT     = 'http://localhost:4321'
+  ;
+
+describe('/my-path', function() {
+  describe('called with no parameters', function() {
+      var ctx = request(SUT + '/my-path')
+      .responds({
+        status: 200,
+      });
+      
+      it('should foo', function() {
+        ctx.res.should.be...
+      })
+  });
+})
+
+```
+
+This will registger all the test handlers using `describe`, `before`, `it` and `after`, using the same titles and structure.
+
+If for some reason you're using hybrid UI and your `--ui` switch is set to 
+any value that is not `bdd` this behavior will not trigger automatically, however, you can 
+still trigger this behavior manually by calling `.bddCtx()`.
+
+```
+suite('/my-path', function() {
+  suite('called with bad parameter value', function() {
+    var ctx = request(SUT + '/my-path?param=bad')
+    .responds({
+      status: 400
+    }).bddCtx()
+    
+    test('should ...' )
+  })
+})
+```
+
+The returned `ctx` object has:
+ - `ctx.err` - when the http-request fails abruptly for networking issues (dns, network).
+    mind that if you have *ANY* statusCode - it means there was no error, and a response 
+    object is passed.
+ - `ctx.res` - the response object (`http.IncomingMessage`)
+ - `ctx.body` - the body on the passed response object, as extracted by the `request/request` 
+    package.
 
 Install
 --------
@@ -213,7 +277,7 @@ Install
 npm install mocha-ui-exports-request
 ```
 
-ok, long name. I will accept better offers...
+ok, long name. I will accept better offers. But until then... :P
 
 Test
 ----
@@ -231,6 +295,7 @@ request
 It builds a requet-tester for the provided `reqOptions`.
 
 `reqOptions` - any options setting valid for mikael's [request](https://github.com/mikeal/request) module, including form, post-data, multiplart, and whatever you want.
+Starting from 1.0.1 - it could be a handler that returns such options settings.
 
 `RequestTester` - implements one method: `RequestTester#responds`, that returns a [mocha-ui-exports](https://github.com/osher/mocha-ui-exports) suite, who's setup function will fire the request, and hold it in context closure for all the asserts that follow.
 
