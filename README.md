@@ -212,7 +212,7 @@ I want to use the standard BDD mocha UI
 ----------
 
 Ok. here:
-(since 1.0.2)
+(since 1.1.0)
 
 If you set to `--ui bdd`, or if your `--ui` switch is not provided
 (not in your CLI command, nor in your `test/mocha.opts` file)
