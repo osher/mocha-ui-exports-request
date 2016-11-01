@@ -1,4 +1,5 @@
-var helper = require('../')
+var helper  = require('../')
+  , async   = require('async')
   , request = helper
   ;
 
@@ -51,7 +52,7 @@ module.exports =
               }
             }
           , "wrong status code should fail" : 
-            { throw   : /to have property 'statusCode' of/
+            { throw   : /expected 500 to equal 200/
             , response: 
               { statusCode: 500
               }
@@ -260,7 +261,7 @@ module.exports =
               "there should be x-header-a or x-header-b" : function(headers) {
                   ['x-header-a', 'x-header-b'].filter(function(header) {
                       return headers[header]
-                  }).length.should.be.ok;
+                  }).length.should.be.ok();
               }
             }
           }
@@ -309,29 +310,48 @@ module.exports =
         respondsCheck(
           { status: 200
           , and: 
-            { 'should be cool' : 
+            { 'should be cool synchronously' : 
               function(res) { 
-                  Should(res.cool).be.ok
+                  Should(res.cool).be.True('A SYNC CHECK FAILED')
+              }
+            , 'should be cool asynchronously' :
+              function(res, done) {
+                  process.nextTick( function() {
+                      Should(res.asyncool).be.True('AN ASYNC CHECK FAILED')
+                      done()
+                  })
               }
             }
           }
-        , { 'response that satisfies should pass' : 
+        , { 'response that satisfies all should pass' : 
             { response: 
               { statusCode:   200
               , headers:  {}
               , body:     "very cool"
               , cool:     true
+              , asyncool: true
               }
             }
-          , 'response that does not satisfy should fail' : 
-            { throw: true
+          , 'response that does not satisfy synchronously should fail synchronously' : 
+            { throw: /A SYNC CHECK FAILED/
             , response: 
               { statusCode:   200
               , headers:  {}
               , body:     "very cool"
-              , uncool:   false
+              , cool:     false
+              , asyncool: true
               }
             }
+          , 'response that does not satisfy asynchronously should fail asynchronously' : 
+            { throw: /AN ASYNC CHECK FAILED/
+            , response: 
+              { statusCode:   200
+              , headers:  {}
+              , body:     "very cool"
+              , cool:     true
+              , asyncool: false
+              }
+            }            
           }
         )
       , "all declarative options used together" : 
@@ -415,26 +435,51 @@ function respondsCheck(expect, asserts) {
               suite.beforeAll(
                 function(err) {
                     if (err) return done(err);
-                    if (!!check.throw)
-                        runSuite.should.throw( true == check.throw ? undefined : check.throw );
-                    else
-                        runSuite();
-                    done();
+                    runSuite(function(err) {
+                        if (check.throw) {
+                            Should.exist(err);
+                            if (check.throw instanceof RegExp)
+                                Should(err.message).match(check.throw);
+                        } else 
+                            Should.not.exist(err)
+                        
+                        done()                        
+                    })
                 }
               );
               
-              function runSuite() {
-                  runSuiteObj(suite)
+              function runSuite(cb) {
+                  runSuiteObj(suite, cb)
               }
               
-              function runSuiteObj(suite) {
-                  Object.keys(suite)
-                        .filter(function(title) { return title != 'beforeAll' })
-                        .forEach(function(title) {
-                            'function' == typeof suite[title] 
-                              ? suite[title]()
-                              : runSuiteObj(suite[title])
-                        })
+              function runSuiteObj(suite, cb) {
+                  async.eachSeries(Object.keys(suite), function(title, next) {
+                      if ('beforeAll' == title) return next();
+                      
+                      var entry = suite[title];
+                      if ('function' != typeof entry)
+                          return runSuiteObj(entry, next);
+                      
+                      if (entry.length == 1) {
+                          var err;
+                          var origUncaughtErrHandler = process._events.uncaughtException;
+                          process._events.uncaughtException = function(x) { err = x };
+                          setTimeout(function(){ 
+                              process._events.uncaughtException = origUncaughtErrHandler;
+                              next(err) 
+                          }, 10);
+                          process.envet
+                          return entry(function(x){ err = x });
+                      }
+                      
+                      try {
+                          suite[title]();
+                      } catch(ex) { 
+                          return next(ex) 
+                      }
+                      next()
+                      
+                  }, cb)
               }
           }
     });
@@ -453,7 +498,7 @@ function respondsCheck(expect, asserts) {
     function testFound(title) {
         return function() {
             suite.should.have.property(title);
-            if (!suite[title]) console.log("eh?", title, suite) || process.exit();
+            if (!suite[title]) process.exit();
 
             if ('object' == typeof suite[title]) return;
             

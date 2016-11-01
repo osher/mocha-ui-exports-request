@@ -1,6 +1,6 @@
 {
   "name": "mocha-ui-exports-request",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "description": "Unit-test helper for network request assertions, based on Mikael's request and should.js of visionmedia, designed for mocha-ui-exports",
   "keywords": [
     "bdd",
@@ -23,7 +23,9 @@
     "request": "~2.47.0"
   },
   "devDependencies": {
+    "async": "^2.1.2",
     "mocha": "^3.0.2",
-    "mocha-ui-exports": "1.x"
+    "mocha-ui-exports": "1.x",
+    "should": "^11.1.1"
   }
 }

@@ -1,3 +1,9 @@
+## 1.1.3
+ - allow add-hock test handlers to name a 2nd argument for `done()`
+
+## 1.1.2 
+ - give more focussed assertion messages (prevent entire IncomingMessage object to serialize)
+ 
 ## 1.1.1
  - fix devDependency version
  

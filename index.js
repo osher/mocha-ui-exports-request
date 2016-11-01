@@ -51,7 +51,7 @@ function requestTester(options){
 
           if (expect.statusCode || expect.status)
               suite["should return status " + expect.status] = function() {
-                  res.should.have.property('statusCode', expect.statusCode || expect.status);
+                  res.statusCode.should.eql( expect.statusCode || expect.status );
               };
 
           if (expect.headers)
@@ -86,7 +86,7 @@ function requestTester(options){
               if (body instanceof RegExp)
                   suite["body should match : " + body] = 
                       function() {
-                          res.should.have.property('body');
+                          (!!res.body).should.be.True('response object does not have `.body` attribute');
                           res.body.should.match(body)
                       };
               else if ('object' == typeof body 
@@ -97,7 +97,8 @@ function requestTester(options){
               else //body is string
                   suite["body should be : " + body.substr(0,20) + (body.length > 20 ? "..." : "" )] = 
                       function() {
-                          res.should.have.property('body', body )
+                          (!!res.body).should.be.True('response object does not have `.body` attribute');
+                          res.body.should.eql( body )
                       };
           });
 
@@ -132,17 +133,17 @@ function requestTester(options){
           /** 
             converts recursively all handlers that expect a SUT as a single param
             to a synchronous mocha handler, passing the original handler the SUT it needs
+            or a handler that expects a SUT and a callback for check against async source
            */
           function toSubsuite(raw, sutName) {
               return Object.keys(raw).reduce( function(wrapped,title) {
                   var fTest = raw[title]
                   switch(typeof fTest) {
                     case 'function': //function of the sut part
-                      wrapped[title] = function() { 
-                          //TRICKY: cannot optimize by assign ctx[sutName] into a var: it is
-                          // not available on declare time
-                          fTest(ctx[sutName])
-                      };
+                      wrapped[title] = 
+                        fTest.length == 1
+                          ? function()     { fTest(ctx[sutName]      ) }
+                          : function(done) { fTest(ctx[sutName], done) };
                       break;
                     case 'object': //nested subsuite for some reason
                       wrapped[title] = toSubsuite(fTest, sutName);
