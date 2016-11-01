@@ -1,3 +1,6 @@
+## 1.2.0
+ - 1.1.3 should have been published as 1.2.0, because it adds unbreaking functionality and not just fixes bugs.
+
 ## 1.1.3
  - allow add-hock test handlers to name a 2nd argument for `done()`
 
