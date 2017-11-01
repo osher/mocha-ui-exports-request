@@ -1,3 +1,6 @@
+## 1.2.1
+ - bump & relax dependency version policy for `request`
+
 ## 1.2.0
  - 1.1.3 should have been published as 1.2.0, because it adds unbreaking functionality and not just fixes bugs.
 
