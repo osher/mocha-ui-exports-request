@@ -1,10 +1,16 @@
+## 1.2.3
+ - rollback to request@2.47
+   will bump major version for that.
+
 ## 1.2.2
  - relax dependency verison for `request`
-
+   WARNING: THIS VERSION FAILS BUILDS on node 0.10 and node 0.12
+ https://travis-ci.org/osher/mocha-ui-exports-request/builds/295714382
+ 
 ## 1.2.1
  - bump & relax dependency version policy for `request`
-   warning: THIS VERSION FAILS BUILDS on node 0.10 and node 0.12
-   https://travis-ci.org/osher/mocha-ui-exports-request/builds/295714382
+   WARNING: THIS VERSION FAILS BUILDS on node 0.10 and node 0.12
+ https://travis-ci.org/osher/mocha-ui-exports-request/builds/295714382  
 
 ## 1.2.0
  - 1.1.3 should have been published as 1.2.0, because it adds unbreaking functionality and not just fixes bugs.
