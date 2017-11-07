@@ -20,7 +20,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "request": "^2.0.0"
+    "request": "~2.47.0"
   },
   "devDependencies": {
     "async": "^2.1.2",
