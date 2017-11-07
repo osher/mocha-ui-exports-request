@@ -1,3 +1,8 @@
+## 2.0.0
+ - relax dependency version policy for `request`
+ - BRAKING CHANGES: 
+   - incompatible with node 0.10 and node 0.12
+
 ## 1.2.2
  - rollback to request@2.47
    will bump major version for that.
