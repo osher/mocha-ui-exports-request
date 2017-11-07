@@ -1,7 +1,8 @@
 ## 2.0.0
  - relax dependency version policy for `request`
+ - mocha-ui-exports is stated a peer-dependency explicitlt
  - BRAKING CHANGES: 
-   - incompatible with node 0.10 and node 0.12
+   - incompatible with node 0.10 and node 0.12 (because of later versions of request)
 
 ## 1.2.2
  - rollback to request@2.47

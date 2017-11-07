@@ -28,6 +28,9 @@
     "mocha-ui-exports": "1.x",
     "should": "^11.1.1"
   },
+  "peerDependencies" : {
+    "mocha-ui-exports": "1.x"
+  },
   "publishConfig": {
     "registry": "http://registry.npmjs.com"
   }
