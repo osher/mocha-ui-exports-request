@@ -21,7 +21,7 @@ module.exports =
         console.log(" -- running mocha in child process -- ")
         child.spawn( 'node'
         , ['../../../node_modules/mocha/bin/mocha', 'test/*.js'] 
-        , { cwd: path.resolve( 'test/fixtures/no-mocha-opts' )
+        , { cwd: path.resolve( 'test/fixtures/mocha-opts-ui-tdd' )
           , stdio: 'inherit'
           }
         ).on('close', function(code) { done(code ? new Error('Oups:' + code) : null) } )

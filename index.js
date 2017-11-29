@@ -9,13 +9,14 @@ Object.defineProperty(module.exports = requestTester, 'request'
   }
 );
 
+requestTester.skip = function skip(options) {
+    if ('string' == typeof options) options = { url: options };
+    const suite = requestTester( extend(options, {skip: true} ));
+    return suite
+    return isUiBdd() ? suite.bddCtx() : suite
+}
+
 function requestTester(options){ 
-    var uiIx    = process.argv.indexOf('--ui');
-    var isUiBdd = 
-          uiIx == -1 
-            ? true 
-            : process.argv[ uiIx + 1 ] == "bdd";
-      
     return {
       responds:  
       function(expect){ 
@@ -35,6 +36,8 @@ function requestTester(options){
                 })
             }
           };
+          
+          if (options.skip) suite.skip = true;
 
           if (expect.err)
             suite['should end with error with message like ' + expect.err ] = 
@@ -125,7 +128,7 @@ function requestTester(options){
             configurable: true
           });
 
-          if (isUiBdd)
+          if (isUiBdd())
               return suite.bddCtx();
           
           return suite;
@@ -156,33 +159,42 @@ function requestTester(options){
           }
 
           function toStdBdd(suite, ctx) {
+              var skip = suite.skip;
               Object.keys(suite).forEach(function(title) {
                   switch( typeof suite[title] ) {
                     //actual handlers
                     case 'function': 
                       switch(title) {
                         case 'beforeAll': 
-                        case 'setup':       return ctx.before(suite[title]);
-                        case 'beforeEach':  return ctx.beforeEach(suite[title]);
-                        case 'afterEach':   return ctx.afterEach(suite[title]);
+                        case 'setup':       return skip ? null : ctx.before(suite[title]);
+                        case 'beforeEach':  return skip ? null : ctx.beforeEach(suite[title]);
+                        case 'afterEach':   return skip ? null : ctx.afterEach(suite[title]);
                         case 'afterAll': 
-                        case 'teardown':    return ctx.after(suite[title]);
+                        case 'teardown':    return skip ? null : ctx.after(suite[title]);
                         case 'timeout':     return; //for now - we don't have it, but not to forget
                       }
-                      return ctx.it(title, suite[title]);
+                      return (skip ? ctx.it.skip : ctx.it)(title, suite[title]);
 
                     //pending tests
                     case 'string':
+                      if ('skip' == title) return;
                     case 'undefined': 
                     case 'boolean':
                       return ctx.it(title); 
                         
                     //subsuites
                     case 'object': 
-                      ctx.describe(title, function() { toStdBdd( suite[title], global) } )
+                      (skip ? ctx.describe.skip : ctx.describe)(title, function() { toStdBdd( suite[title], global) } )
                   }
               })
           }
       }
     }
+}
+
+function isUiBdd() {
+    var uiIx    = process.argv.indexOf('--ui');
+    return uiIx == -1 
+      ? true 
+      : process.argv[ uiIx + 1 ] == "bdd";
 }

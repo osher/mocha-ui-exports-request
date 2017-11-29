@@ -371,6 +371,18 @@ module.exports =
         )
       }
     }
+  , '.skip(options)':
+    { 'should return the same suite the original handler return, with the skip flag':
+      function() {
+          var opts = { url: 'http://foo.com', method: 'GET' }
+          var orig = request({ url: 'http://foo.com', method: 'GET' }).responds({status: 200 })
+          var skipped = request.skip({ url: 'http://foo.com', method: 'GET' }).responds({status: 200 })
+          
+          orig.skip = true;
+          
+          Should(orig).eql(skipped)
+      }
+    }
   }
 }
 
@@ -513,7 +525,7 @@ function addInitiationCheck(inSuite, reqCase) {
       , subsuite = {}
       ;
     
-    inSuite[ (typeof reqCase) + " as " + (reqCase.title || 'object' == typeof reqCase ? JSON.stringify(reqCase) : reqCase.toString() )] = 
+    return inSuite[ (typeof reqCase) + " as " + (reqCase.title || 'object' == typeof reqCase ? JSON.stringify(reqCase) : reqCase.toString() )] = 
       { "should not fail" : 
         function() {
             r = request(reqCase) 

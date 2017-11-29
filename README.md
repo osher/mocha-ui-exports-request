@@ -504,6 +504,53 @@ becomes:
    and
       √ should give a redirect header, or the resource
 ```
+
+### options.skip
+
+marks the suite as skipped
+
+Example:
+```
+module.exports = module.exports = {
+  '/my path' : 
+    request({
+      url: 'http://my-sut-server.com/my-path',
+      skip: true
+    })
+    .responds({
+      status: 200
+    })
+}
+```
+
+becomes:
+```
+/my-path
+   - should return status 200
+```
+
+request.skip
+==============
+
+same as passing `options.skip`
+
+Example:
+```
+module.exports = module.exports = {
+  '/my path' : 
+    request.skip( 'http://my-sut-server.com/my-path' )
+    .responds( {
+      status: 200
+    })
+}
+```
+
+becomes:
+```
+/my-path
+   - should return status 200
+```
+
    
 For more detailed API spec - don't dig for docs - run the [test](#test), just like the BDD lore sais...
 Have fun ;)

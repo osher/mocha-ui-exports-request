@@ -1,3 +1,6 @@
+## 2.1.0
+ - added support in `options.skip` and `request.skip`
+
 ## 2.0.0
  - relax dependency version policy for `request`
  - mocha-ui-exports is stated a peer-dependency explicitlt
