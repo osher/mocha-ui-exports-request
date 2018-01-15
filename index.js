@@ -97,12 +97,25 @@ function requestTester(options){
                    && Object.keys(body).length
                     ) 
                   suite["response body"] = toSubsuite(body, 'body');
-              else //body is string
+              else if ('string' == typeof body)
                   suite["body should be : " + body.substr(0,20) + (body.length > 20 ? "..." : "" )] = 
                       function() {
                           (!!res.body).should.be.True('response object does not have `.body` attribute');
                           res.body.should.eql( body )
                       };
+              else
+                  throw extend(
+                      new Error(
+                      [ 'invalid body passed to responds({body})'
+                      , 'body may be: '
+                      , ' - an exact expected string'
+                      , ' - a regex to match against response body text'
+                      , ' - a suite Object that maps title -> test|suite'
+                      , ' - an array of regexes and one body suites'
+                      ]
+                    )
+                  , { body: body }
+                  );
           });
 
           if (  expect.responseBody
@@ -144,9 +157,9 @@ function requestTester(options){
                   switch(typeof fTest) {
                     case 'function': //function of the sut part
                       wrapped[title] = 
-                        fTest.length == 1
-                          ? function()     { fTest(ctx[sutName]      ) }
-                          : function(done) { fTest(ctx[sutName], done) };
+                        fTest.length == 2
+                          ? function(done) { fTest(ctx[sutName], done) }
+                          : function()     { fTest(ctx[sutName]      ) };
                       break;
                     case 'object': //nested subsuite for some reason
                       wrapped[title] = toSubsuite(fTest, sutName);

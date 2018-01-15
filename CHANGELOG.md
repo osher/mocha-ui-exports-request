@@ -1,3 +1,9 @@
+## 2.1.1
+ - added a friendly error when .responds({body}) is invalid
+ - responds({body, responseBody, headers, and}) - 
+   pass (SUT,done) when test-function declares 2 arguments, and just SUT in any other case
+   (opposed to pass SUT when test-function declares 1 argument, and (SUT,done) in any other case)
+
 ## 2.1.0
  - added support in `options.skip` and `request.skip`
 
