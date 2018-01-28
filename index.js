@@ -1,5 +1,6 @@
 var extend  = require('util')._extend;
 var request = require('request');
+var uiExportHooks = {beforeAll: true, afterAll: true, before: true, after: true, beforeEach: true, afterEach: true};
 
 Object.defineProperty(module.exports = requestTester, 'request'
 , { get:          function() { return requestTester }
@@ -24,20 +25,26 @@ function requestTester(options){
             , res
             , suite =  {
             beforeAll: 
-            function(done) {
+            function requestBeforeAll(done) {
                 if ('function' == typeof options) options = options();
                 
-                request(options, function(oErr,oRes, body) {
-                    ctx.res = res = oRes;
-                    ctx.err = oErr;
-                    ctx.body = body;
-                    if (res) ctx.headers = res.headers;
-                    expect.err ? done() : done(oErr)
-                })
+                'function' == typeof options.then
+                  ? options.then(fire)
+                  : fire(options);
+                
+                function fire(options) {
+                    request(options, function(oErr,oRes, body) {
+                        ctx.res = res = oRes;
+                        ctx.err = oErr;
+                        ctx.body = body;
+                        if (res) ctx.headers = res.headers;
+                        expect.err ? done() : done(oErr)
+                    })
+                }
             }
           };
           
-          if (options.skip) suite.skip = true;
+          if (expect.skip || options.skip) suite.skip = true;
 
           if (expect.err)
             suite['should end with error with message like ' + expect.err ] = 
@@ -156,10 +163,12 @@ function requestTester(options){
                   var fTest = raw[title]
                   switch(typeof fTest) {
                     case 'function': //function of the sut part
-                      wrapped[title] = 
-                        fTest.length == 2
-                          ? function(done) { fTest(ctx[sutName], done) }
-                          : function()     { fTest(ctx[sutName]      ) };
+                      wrapped[title] =
+                        uiExportHooks[title]
+                          ? fTest
+                          : fTest.length == 2
+                              ? function(done) { fTest(ctx[sutName], done) }
+                              : function()     { fTest(ctx[sutName]      ) };
                       break;
                     case 'object': //nested subsuite for some reason
                       wrapped[title] = toSubsuite(fTest, sutName);

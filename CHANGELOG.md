@@ -1,3 +1,6 @@
+## 2.1.2
+ - fixed bug in how mocha hooks are passed in nested sub-suites
+
 ## 2.1.1
  - added a friendly error when .responds({body}) is invalid
  - responds({body, responseBody, headers, and}) - 

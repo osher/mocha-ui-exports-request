@@ -354,6 +354,53 @@ module.exports =
             }            
           }
         )
+      , "nesting async mocha hooks in sub-suites should work": 
+        block(function() {
+            var ooo = []; //Order Of Operations
+            return respondsCheck(
+              { status: 200
+              , and: 
+                { beforeAll: function(done) {  ooo.push('beforeAll'); done() }
+                , beforeEach: function(done) {  ooo.push('beforeEach'); done() }
+                , 'foo': 
+                  { beforeAll: function() {  ooo.push('  beforeAll') }
+                  , beforeEach: function(done) {  ooo.push('  beforeEach'); done() }
+                  , 'a cool test': function() { ooo.push('    cool1') }
+                  , 'a 2nd cool test': function() { ooo.push('    cool2') }
+                  , afterEach: function() {  ooo.push('  afterEach')  }
+                  , afterAll: function(done) {  ooo.push('  afterAll'); done() }
+                  }
+                , 'bar': 
+                  { 'should call beforeAll and afterAll': function() {
+                      Should(ooo).eql(
+                        //TRICKY: test here is not run by mocha, but by our mock-mocha.
+                        // our mock is primitive - it does not call hooks logically, 
+                        // but on the order they appear on the object
+                        //The meaning of the test is to see that hooks are wrapped correctly
+                        [ 'beforeAll'
+                        , 'beforeEach'
+                        , '  beforeAll'
+                        , '  beforeEach'
+                        , '    cool1'
+                        , '    cool2'
+                        , '  afterEach'
+                        , '  afterAll'
+                        ]
+                      )
+                    }
+                  }
+                }
+              }
+            , { 'a successful response should fire all mocha hooks without problems': 
+                { response:
+                  { statusCode: 200
+                  , headers:    {}
+                  , body:       "cool"
+                  }
+                }
+              }
+            )
+        })
       , "all declarative options used together" : 
         respondsCheck( 
           { status: 404
@@ -453,7 +500,7 @@ function respondsCheck(expect, asserts) {
                             if (check.throw instanceof RegExp)
                                 Should(err.message).match(check.throw);
                         } else 
-                            Should.not.exist(err)
+                            Should.not.exist(err, err && err.stack)
                         
                         done()                        
                     })
@@ -466,9 +513,9 @@ function respondsCheck(expect, asserts) {
               
               function runSuiteObj(suite, cb) {
                   async.eachSeries(Object.keys(suite), function(title, next) {
-                      if ('beforeAll' == title) return next();
-                      
                       var entry = suite[title];
+                      if ('beforeAll' == title && entry.name == 'requestBeforeAll') return next();
+                      
                       if ('function' != typeof entry)
                           return runSuiteObj(entry, next);
                       
@@ -480,7 +527,6 @@ function respondsCheck(expect, asserts) {
                               process._events.uncaughtException = origUncaughtErrHandler;
                               next(err) 
                           }, 10);
-                          process.envet
                           return entry(function(x){ err = x });
                       }
                       
