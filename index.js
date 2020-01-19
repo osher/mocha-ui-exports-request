@@ -215,6 +215,11 @@ function requestTester(options){
 }
 
 function isUiBdd() {
+    //TRICKY: mocha 6 and above introduces a new mechanism for configuring mocha - mocharc.
+    if (Number(require('mocha/package').version.replace(/\..*/, '')) >= 6) {
+        var opts = require('mocha/lib/cli/options').loadOptions(process.argv.slice(2));
+        return opts.ui == "bdd";
+    }
     var uiIx    = process.argv.indexOf('--ui');
     return uiIx == -1 
       ? true 
