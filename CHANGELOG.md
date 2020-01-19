@@ -1,3 +1,6 @@
+## 2.2.0
+ - support mocha v6 >= 0 (when available - use mocha's internal config loader)
+
 ## 2.1.2
  - fixed bug in how mocha hooks are passed in nested sub-suites
 
